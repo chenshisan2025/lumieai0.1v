@@ -1,0 +1,60 @@
+{
+  "name": "dataproof-contracts",
+  "version": "1.0.0",
+  "description": "DataProof智能合约 - 数据存证系统",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "deploy:local": "hardhat run deploy.js --network localhost",
+    "deploy:testnet": "hardhat run deploy.js --network bscTestnet",
+    "deploy:mainnet": "hardhat run deploy.js --network bscMainnet",
+    "verify:testnet": "hardhat verify --network bscTestnet",
+    "verify:mainnet": "hardhat verify --network bscMainnet",
+    "node": "hardhat node",
+    "clean": "hardhat clean",
+    "size": "hardhat size-contracts",
+    "gas-report": "REPORT_GAS=true hardhat test",
+    "flatten": "hardhat flatten contracts/DataProof.sol > flattened/DataProof_flattened.sol",
+    "setup": "npm install && cp .env.example .env"
+  },
+  "keywords": [
+    "blockchain",
+    "smart-contracts",
+    "data-proof",
+    "merkle-tree",
+    "bsc",
+    "solidity"
+  ],
+  "author": "LumieAI Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "chai": "^4.3.10",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.19.4",
+    "hardhat-gas-reporter": "^1.0.9",
+    "hardhat-contract-sizer": "^2.10.0",
+    "solidity-coverage": "^0.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "merkletreejs": "^0.3.11",
+    "crypto": "^1.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lumieai/dataproof-contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lumieai/dataproof-contracts/issues"
+  },
+  "homepage": "https://github.com/lumieai/dataproof-contracts#readme"
+}

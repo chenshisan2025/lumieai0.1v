@@ -1,0 +1,63 @@
+openapi: 3.0.3
+info:
+  title: LUMIEAI Backend API
+  version: 0.1.0
+servers:
+  - url: https://api.lumie.ai/v1
+paths:
+  /auth/register:
+    post:
+      summary: Register (email) or SIWE
+      responses: { '200': { description: OK } }
+  /auth/login:
+    post:
+      summary: Login (email) or SIWE
+      responses: { '200': { description: OK } }
+  /auth/wallet/bind:
+    post:
+      summary: Bind wallet
+      responses: { '200': { description: OK } }
+  /proofs/daily/commit:
+    post:
+      summary: Submit daily leaves and manifest
+      responses: { '200': { description: OK } }
+  /proofs/batch/anchor:
+    post:
+      summary: Anchor Merkle root on BSC + IPFS CID
+      responses: { '200': { description: Anchored } }
+  /rewards/week/{week}/summary:
+    get:
+      summary: Get weekly merkle root + CID
+      parameters:
+        - in: path
+          name: week
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+  /rewards/claim:
+    post:
+      summary: Generate claim payload (index, amount, proof)
+      responses: { '200': { description: OK } }
+  /ai/coach/plan:
+    post:
+      summary: 7-day micro plan (non-medical)
+      responses: { '200': { description: OK } }
+  /nft/badges:
+    get:
+      summary: List user badges
+      responses: { '200': { description: OK } }
+    post:
+      summary: Mint a badge to wallet
+      responses: { '200': { description: OK } }
+  /report/weekly:
+    post:
+      summary: Generate weekly PDF report
+      responses: { '200': { description: OK } }
+  /store/items:
+    get:
+      summary: List store items
+      responses: { '200': { description: OK } }
+  /store/order:
+    post:
+      summary: Create order (LUM-only)
+      responses: { '200': { description: OK } }

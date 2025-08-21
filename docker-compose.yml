@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend_api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://lumieai:password@postgres:5432/lumieai_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend_api:/app
+    networks:
+      - lumieai-network
+
+  # PostgreSQL Database
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      - POSTGRES_DB=lumieai_db
+      - POSTGRES_USER=lumieai
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - lumieai-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - lumieai-network
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: ./backend_api
+      dockerfile: Dockerfile
+    command: celery -A app.core.celery worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://lumieai:password@postgres:5432/lumieai_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend_api:/app
+    networks:
+      - lumieai-network
+
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build:
+      context: ./backend_api
+      dockerfile: Dockerfile
+    command: celery -A app.core.celery beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://lumieai:password@postgres:5432/lumieai_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend_api:/app
+    networks:
+      - lumieai-network
+
+  # Flower (Celery Monitoring)
+  flower:
+    build:
+      context: ./backend_api
+      dockerfile: Dockerfile
+    command: celery -A app.core.celery flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=postgresql://lumieai:password@postgres:5432/lumieai_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    depends_on:
+      - redis
+    volumes:
+      - ./backend_api:/app
+    networks:
+      - lumieai-network
+
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+    networks:
+      - lumieai-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  lumieai-network:
+    driver: bridge
