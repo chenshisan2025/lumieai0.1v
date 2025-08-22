@@ -122,14 +122,29 @@ export default function LUMPayment({
       
       if (tx.success && tx.transaction) {
         const receipt = await tx.transaction.wait();
-        toast.success('授权成功！');
+        toast.success(`授权成功！已授权 ${formatLUM(amount)} LUM`, { id: 'approve-tx' });
         await checkBalanceAndAllowance();
         setCurrentStep('pay');
       } else {
         throw new Error(tx.error || '授权失败');
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '授权失败';
+      let errorMessage = '授权失败';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('User rejected') || error.message.includes('user rejected')) {
+          errorMessage = '用户取消了授权交易';
+        } else if (error.message.includes('insufficient funds')) {
+          errorMessage = '账户余额不足以支付Gas费用';
+        } else if (error.message.includes('Network validation failed')) {
+          errorMessage = '请切换到正确的网络（BSC主网）';
+        } else if (error.message.includes('Wallet not connected')) {
+          errorMessage = '钱包未连接，请重新连接钱包';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       onPaymentError(errorMessage);
       toast.error(errorMessage, { id: 'approve-tx' });
     } finally {
@@ -144,7 +159,7 @@ export default function LUMPayment({
     try {
       // 检查余额
       if (parseFloat(lumBalance) < amount) {
-        throw new Error('LUM 余额不足');
+        throw new Error(`LUM 余额不足。当前余额：${formatLUM(parseFloat(lumBalance))} LUM，需要：${formatLUM(amount)} LUM`);
       }
 
       // 检查授权
@@ -160,13 +175,30 @@ export default function LUMPayment({
       
       if (tx.success && tx.transaction) {
         const receipt = await tx.transaction.wait();
-        toast.success('支付成功！');
+        toast.success(`支付成功！已支付 ${formatLUM(amount)} LUM`, { id: 'payment-tx' });
         onPaymentSuccess(receipt.transactionHash);
       } else {
         throw new Error(tx.error || '支付失败');
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '支付失败';
+      let errorMessage = '支付失败';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('User rejected') || error.message.includes('user rejected')) {
+          errorMessage = '用户取消了支付交易';
+        } else if (error.message.includes('insufficient funds')) {
+          errorMessage = '账户余额不足以支付Gas费用';
+        } else if (error.message.includes('Network validation failed')) {
+          errorMessage = '请切换到正确的网络（BSC主网）';
+        } else if (error.message.includes('Wallet not connected')) {
+          errorMessage = '钱包未连接，请重新连接钱包';
+        } else if (error.message.includes('LUM 余额不足')) {
+          errorMessage = error.message; // 保持详细的余额信息
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       onPaymentError(errorMessage);
       toast.error(errorMessage, { id: 'payment-tx' });
     } finally {
@@ -223,7 +255,12 @@ export default function LUMPayment({
           {parseFloat(lumBalance) < amount && (
             <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
               <AlertCircle className="w-5 h-5 text-red-400" />
-              <p className="text-red-300 text-sm">LUM 余额不足，请先获取足够的 LUM 代币</p>
+              <div className="flex-1">
+                <p className="text-red-300 text-sm">LUM 余额不足</p>
+                <p className="text-red-400 text-xs mt-1">
+                  当前余额：{formatLUM(parseFloat(lumBalance))} LUM，需要：{formatLUM(amount)} LUM
+                </p>
+              </div>
             </div>
           )}
           
@@ -231,7 +268,12 @@ export default function LUMPayment({
             <div className="space-y-3">
               <div className="flex items-center gap-2 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
                 <AlertCircle className="w-5 h-5 text-yellow-400" />
-                <p className="text-yellow-300 text-sm">需要授权 {formatLUM(amount)} LUM 用于此次购买</p>
+                <div className="flex-1">
+                  <p className="text-yellow-300 text-sm">需要授权 LUM 代币</p>
+                  <p className="text-yellow-400 text-xs mt-1">
+                    将授权 {formatLUM(amount)} LUM 用于此次购买（精确授权，安全可控）
+                  </p>
+                </div>
               </div>
               <button
                 onClick={handleApprove}

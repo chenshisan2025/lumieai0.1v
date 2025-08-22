@@ -3,5 +3,21 @@
   "insufficient_bnb_balance": "BNB 余额不足",
   "subscription_price_bnb": "订阅价格（BNB）",
   "subscription_active_until": "订阅有效期至",
-  "pay_in_bnb": "使用 BNB 支付"
+  "pay_in_bnb": "使用 BNB 支付",
+  "bnb_balance": "BNB 余额",
+  "network_check_failed": "请切换到 BSC 网络",
+  "gas_estimation_failed": "Gas 预估失败",
+  "transaction_pending": "交易处理中...",
+  "transaction_success": "交易成功",
+  "transaction_failed": "交易失败",
+  "transaction_rejected": "用户拒绝交易",
+  "transaction_timeout": "交易超时",
+  "view_on_bscscan": "在 BscScan 查看",
+  "subscription_expired": "订阅已过期，请续费",
+  "subscription_valid_until": "订阅有效期至：{date}",
+  "renew_subscription": "续费订阅",
+  "insufficient_balance_for_gas": "余额不足以支付 Gas 费用",
+  "wrong_network": "网络错误，请切换到 BSC",
+  "connecting_wallet": "连接钱包中...",
+  "purchase_subscription": "购买订阅"
 }

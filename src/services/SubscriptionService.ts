@@ -113,6 +113,43 @@ class SubscriptionService {
   }
 
   /**
+   * 预估购买订阅的Gas费用
+   * @param planId 计划ID
+   * @param signer 签名者（连接的钱包）
+   * @returns Gas费用（以BNB为单位的字符串）
+   */
+  async estimateGas(planId: number, signer: ethers.Signer): Promise<string> {
+    try {
+      // 强制验证网络
+      await walletService.enforceCorrectNetwork();
+      
+      const contractWithSigner = this.contract.connect(signer);
+      const plan = await this.getPlan(planId);
+      
+      if (!plan || !plan.active) {
+        throw new Error('Plan not found or not active');
+      }
+
+      // 预估gas
+      const gasEstimate = await contractWithSigner.estimateGas.purchase(planId, {
+        value: plan.priceWei
+      });
+
+      // 获取当前gas价格
+      const gasPrice = await signer.getGasPrice();
+      
+      // 计算总gas费用（wei）
+      const gasCost = gasEstimate.mul(gasPrice);
+      
+      // 转换为BNB并返回
+      return ethers.utils.formatEther(gasCost);
+    } catch (error) {
+      console.error('Error estimating gas:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 购买订阅（需要连接钱包）
    * @param planId 计划ID
    * @param signer 签名者（连接的钱包）

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Blockchain
     BSC_RPC_URL: str = "https://data-seed-prebsc-1-s1.binance.org:8545/"
     BSC_API_KEY: Optional[str] = None
-    SUBSCRIPTION_MANAGER_ADDRESS: str = "0xF87A47426Fc5718456d69a347320f5aebF250Ea9"
+    SUBSCRIPTION_MANAGER_ADDRESS: str = "0x9c7920f113B27De6a57bbCF53D6111cbA5532498"
     
     # Subscription Plan (Default)
     DEFAULT_PLAN_ID: int = 1

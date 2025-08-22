@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, DollarSign, Calendar, CheckCircle, XCircle, Copy, ExternalLink, Wallet, TrendingUp } from 'lucide-react';
+import { CreditCard, DollarSign, Calendar, CheckCircle, XCircle, Copy, ExternalLink, Wallet, TrendingUp, Plus, Edit, ToggleLeft, Shield } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { toast } from 'sonner';
 import { ethers } from 'ethers';
 import SubscriptionManagerABI from '@/contracts/SubscriptionManager.json';
 
 // 合约配置
-const SUBSCRIPTION_MANAGER_ADDRESS = import.meta.env.VITE_SUBSCRIPTION_MANAGER_ADDRESS || '0xF87A47426Fc5718456d69a347320f5aebF250Ea9';
+const SUBSCRIPTION_MANAGER_ADDRESS = import.meta.env.VITE_SUBSCRIPTION_MANAGER_ADDRESS || '0x9c7920f113B27De6a57bbCF53D6111cbA5532498';
 const BSC_TESTNET_RPC_URL = import.meta.env.VITE_BSC_TESTNET_RPC_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545/';
+const BSC_TESTNET_CHAIN_ID = 97;
 
 interface SubscriptionPlan {
   planId: number;
@@ -57,7 +58,7 @@ const Subscriptions: React.FC = () => {
             priceWei: planData.priceWei.toString(),
             periodDays: planData.periodDays.toNumber(),
             active: planData.active,
-            name: planData.name || `计划 ${i}`
+            name: getPlanName(i, planData.periodDays)
           });
         } catch (err) {
           console.warn(`Failed to load plan ${i}:`, err);
@@ -97,7 +98,7 @@ const Subscriptions: React.FC = () => {
   }, []);
 
   // 复制到剪贴板
-  const copyToClipboard = (text: string, label: string) => {
+  const copyToClipboard = (text: string, label: string = '内容') => {
     navigator.clipboard.writeText(text).then(() => {
       toast.success(`${label}已复制到剪贴板`);
     }).catch(() => {
@@ -107,7 +108,17 @@ const Subscriptions: React.FC = () => {
 
   // 格式化BNB金额
   const formatBNB = (weiAmount: string) => {
-    return ethers.utils.formatEther(weiAmount);
+    return parseFloat(ethers.utils.formatEther(weiAmount)).toFixed(4);
+  };
+
+  // 获取计划名称
+  const getPlanName = (planId: number, periodDays: number) => {
+    const planNames: { [key: number]: string } = {
+      1: '基础版',
+      2: '专业版', 
+      3: '企业版'
+    };
+    return planNames[planId] || `${periodDays}天计划`;
   };
 
   // Hardhat脚本命令
@@ -266,13 +277,23 @@ const Subscriptions: React.FC = () => {
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                   链上操作脚本
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  以下命令需要通过多签钱包或合约Owner执行。请复制命令到终端运行。
-                </p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center">
+                    <XCircle className="h-5 w-5 text-yellow-600 mr-2" />
+                    <p className="text-yellow-800 font-medium">重要提醒</p>
+                  </div>
+                  <p className="text-yellow-700 mt-2 text-sm">
+                    所有链上写操作需要通过多签钱包或Owner账户执行，管理后台仅提供脚本指引，不直接发送交易。
+                  </p>
+                </div>
                 
                 <div className="space-y-4">
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">添加新订阅计划</h4>
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                      添加新订阅计划
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">创建新的订阅计划，需要指定价格(BNB)和周期(天)</p>
                     <div className="bg-gray-50 rounded p-3 font-mono text-sm">
                       <div className="flex items-center justify-between">
                         <code>{scriptCommands.addPlan}</code>
@@ -284,10 +305,17 @@ const Subscriptions: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      参数说明：--price (BNB价格) --period (订阅天数) --network (网络)
+                    </div>
                   </div>
                   
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">更新订阅计划</h4>
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-blue-600" />
+                      更新订阅计划
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">修改现有订阅计划的价格或周期</p>
                     <div className="bg-gray-50 rounded p-3 font-mono text-sm">
                       <div className="flex items-center justify-between">
                         <code>{scriptCommands.updatePlan}</code>
@@ -299,10 +327,17 @@ const Subscriptions: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      参数说明：--plan-id (计划ID) --price (新价格) --period (新周期)
+                    </div>
                   </div>
                   
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">暂停/恢复计划</h4>
+                    <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                      <XCircle className="h-4 w-4 mr-2 text-orange-600" />
+                      暂停/恢复计划
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">切换订阅计划的启用状态</p>
                     <div className="bg-gray-50 rounded p-3 font-mono text-sm">
                       <div className="flex items-center justify-between">
                         <code>{scriptCommands.pausePlan}</code>
@@ -314,7 +349,20 @@ const Subscriptions: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      参数说明：--plan-id (要切换状态的计划ID)
+                    </div>
                   </div>
+                </div>
+                
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-800 mb-2">执行前准备</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• 确保已配置正确的私钥或连接多签钱包</li>
+                    <li>• 检查网络配置和RPC连接</li>
+                    <li>• 验证合约地址：{SUBSCRIPTION_MANAGER_ADDRESS}</li>
+                    <li>• 确保账户有足够的BNB支付Gas费用</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -326,20 +374,23 @@ const Subscriptions: React.FC = () => {
           <div className="space-y-6">
             {/* 收入统计卡片 */}
             {revenue && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <DollarSign className="h-6 w-6 text-green-400" />
+                        <TrendingUp className="h-6 w-6 text-green-400" />
                       </div>
                       <div className="ml-5 w-0 flex-1">
                         <dl>
                           <dt className="text-sm font-medium text-gray-500 truncate">
-                            总收入
+                            累计收入
                           </dt>
                           <dd className="text-lg font-medium text-gray-900">
                             {formatBNB(revenue.totalRevenue)} BNB
+                          </dd>
+                          <dd className="text-xs text-gray-500">
+                            自合约部署以来
                           </dd>
                         </dl>
                       </div>
@@ -361,6 +412,32 @@ const Subscriptions: React.FC = () => {
                           <dd className="text-lg font-medium text-gray-900">
                             {formatBNB(revenue.contractBalance)} BNB
                           </dd>
+                          <dd className="text-xs text-gray-500">
+                            可提取金额
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="p-5">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <DollarSign className="h-6 w-6 text-purple-400" />
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 truncate">
+                            已提取
+                          </dt>
+                          <dd className="text-lg font-medium text-gray-900">
+                            {(parseFloat(formatBNB(revenue.totalRevenue)) - parseFloat(formatBNB(revenue.contractBalance))).toFixed(4)} BNB
+                          </dd>
+                          <dd className="text-xs text-gray-500">
+                            历史提取总额
+                          </dd>
                         </dl>
                       </div>
                     </div>
@@ -376,47 +453,63 @@ const Subscriptions: React.FC = () => {
                   合约信息
                 </h3>
                 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500">合约地址:</span>
-                    <div className="flex items-center space-x-2">
-                      <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                        {SUBSCRIPTION_MANAGER_ADDRESS}
-                      </code>
-                      <button
-                        onClick={() => copyToClipboard(SUBSCRIPTION_MANAGER_ADDRESS, '合约地址')}
-                        className="p-1 text-gray-500 hover:text-gray-700"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <a
-                        href={`https://testnet.bscscan.com/address/${SUBSCRIPTION_MANAGER_ADDRESS}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 text-gray-500 hover:text-gray-700"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-2">合约地址</p>
+                      <div className="flex items-center space-x-2">
+                        <code className="text-sm bg-gray-100 px-2 py-1 rounded font-mono">
+                          {SUBSCRIPTION_MANAGER_ADDRESS}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(SUBSCRIPTION_MANAGER_ADDRESS, '合约地址')}
+                          className="p-1 text-gray-500 hover:text-gray-700"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-2">网络</p>
+                      <p className="text-sm text-gray-900 font-mono">BSC Testnet (Chain ID: {BSC_TESTNET_CHAIN_ID})</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500">网络:</span>
-                    <span className="text-sm text-gray-900">BSC Testnet (ChainID: 97)</span>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <a
+                      href={`https://testnet.bscscan.com/address/${SUBSCRIPTION_MANAGER_ADDRESS}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      在 BscScan 上查看合约详情
+                      <ExternalLink className="h-4 w-4 ml-1" />
+                    </a>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 提现脚本 */}
+            {/* 资金提取说明 */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  资金提现
+                  资金提取说明
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  ⚠️ 提现操作需要通过多签钱包或合约Owner执行，确保资金安全。
-                </p>
+                
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center mb-3">
+                    <Shield className="h-5 w-5 text-orange-600 mr-2" />
+                    <h4 className="font-medium text-orange-800">安全提醒</h4>
+                  </div>
+                  <div className="text-sm text-orange-700 space-y-2">
+                    <p>• 合约资金提取需要通过多签钱包或Owner账户执行</p>
+                    <p>• 建议定期提取资金以降低合约风险</p>
+                    <p>• 提取操作会触发事件记录，便于审计追踪</p>
+                    <p>• 确保账户有足够的BNB支付Gas费用</p>
+                  </div>
+                </div>
                 
                 <div className="space-y-4">
                   <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-4">
@@ -431,6 +524,9 @@ const Subscriptions: React.FC = () => {
                           <Copy className="w-4 h-4" />
                         </button>
                       </div>
+                    </div>
+                    <div className="mt-2 text-xs text-yellow-700">
+                      参数说明：--amount (提取金额，单位BNB) --to (接收地址)
                     </div>
                   </div>
                   
@@ -447,6 +543,9 @@ const Subscriptions: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                    <div className="mt-2 text-xs text-red-700">
+                      暂停后将禁止所有订阅操作，仅用于紧急情况
+                    </div>
                   </div>
                   
                   <div className="border border-green-200 bg-green-50 rounded-lg p-4">
@@ -461,6 +560,9 @@ const Subscriptions: React.FC = () => {
                           <Copy className="w-4 h-4" />
                         </button>
                       </div>
+                    </div>
+                    <div className="mt-2 text-xs text-green-700">
+                      恢复合约正常运行，允许用户订阅
                     </div>
                   </div>
                 </div>

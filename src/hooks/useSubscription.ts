@@ -40,7 +40,7 @@ export function useSubscription(): UseSubscriptionReturn {
       setWalletInfo(info);
       
       if (info) {
-        const isCorrectNetwork = await walletService.isOnBSCTestnet();
+        const isCorrectNetwork = await walletService.isOnBSCNetwork();
         setIsOnCorrectNetwork(isCorrectNetwork);
       }
     } catch (error) {
@@ -63,11 +63,11 @@ export function useSubscription(): UseSubscriptionReturn {
       setWalletInfo(info);
       
       if (info) {
-        const isCorrectNetwork = await walletService.isOnBSCTestnet();
+        const isCorrectNetwork = await walletService.isOnBSCNetwork();
         setIsOnCorrectNetwork(isCorrectNetwork);
         
         if (!isCorrectNetwork) {
-          toast.warning('请切换到BSC测试网');
+          toast.warning('请切换到BSC网络');
         } else {
           toast.success('钱包连接成功');
         }
@@ -92,9 +92,9 @@ export function useSubscription(): UseSubscriptionReturn {
   // 切换到正确的网络
   const switchToCorrectNetwork = useCallback(async () => {
     try {
-      await walletService.switchToBSCTestnet();
+      await walletService.switchToBSCNetwork();
       setIsOnCorrectNetwork(true);
-      toast.success('已切换到BSC测试网');
+      toast.success('已切换到BSC网络');
     } catch (error: any) {
       console.error('Error switching network:', error);
       toast.error(error.message || '切换网络失败');
@@ -128,7 +128,7 @@ export function useSubscription(): UseSubscriptionReturn {
     }
 
     if (!isOnCorrectNetwork) {
-      toast.error('请切换到BSC测试网');
+      toast.error('请切换到BSC网络');
       return;
     }
 

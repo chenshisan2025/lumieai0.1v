@@ -3,5 +3,21 @@
   "insufficient_bnb_balance": "Insufficient BNB balance",
   "subscription_price_bnb": "Subscription Price (BNB)",
   "subscription_active_until": "Active until",
-  "pay_in_bnb": "Pay in BNB"
+  "pay_in_bnb": "Pay in BNB",
+  "bnb_balance": "BNB Balance",
+  "network_check_failed": "Please switch to BSC network",
+  "gas_estimation_failed": "Failed to estimate gas",
+  "transaction_pending": "Transaction pending...",
+  "transaction_success": "Transaction successful",
+  "transaction_failed": "Transaction failed",
+  "transaction_rejected": "Transaction rejected by user",
+  "transaction_timeout": "Transaction timeout",
+  "view_on_bscscan": "View on BscScan",
+  "subscription_expired": "Subscription expired, please renew",
+  "subscription_valid_until": "Subscription valid until: {date}",
+  "renew_subscription": "Renew Subscription",
+  "insufficient_balance_for_gas": "Insufficient balance for gas fee",
+  "wrong_network": "Wrong network. Please switch to BSC",
+  "connecting_wallet": "Connecting wallet...",
+  "purchase_subscription": "Purchase Subscription"
 }

@@ -106,6 +106,55 @@ class WalletService {
   }
 
   /**
+   * 切换到BSC网络（优先主网，fallback到测试网）
+   */
+  async switchToBSCNetwork(): Promise<boolean> {
+    if (!this.isMetaMaskInstalled()) {
+      throw new Error('请安装MetaMask钱包');
+    }
+
+    // 优先尝试切换到BSC主网
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x38' }], // BSC Mainnet chainId: 56 (0x38)
+      });
+      return true;
+    } catch (switchError: any) {
+      // 如果主网不存在，添加BSC主网
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: '0x38',
+                chainName: 'BSC Mainnet',
+                nativeCurrency: {
+                  name: 'BNB',
+                  symbol: 'BNB',
+                  decimals: 18,
+                },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com/'],
+              },
+            ],
+          });
+          return true;
+        } catch (addError) {
+          console.log('BSC主网添加失败，尝试测试网:', addError);
+          // Fallback到测试网
+          return await this.switchToBSCTestnet();
+        }
+      } else {
+        console.log('BSC主网切换失败，尝试测试网:', switchError);
+        // Fallback到测试网
+        return await this.switchToBSCTestnet();
+      }
+    }
+  }
+
+  /**
    * 切换到BSC测试网
    */
   async switchToBSCTestnet(): Promise<boolean> {
@@ -153,6 +202,23 @@ class WalletService {
   }
 
   /**
+   * 检查当前是否在BSC网络（主网或测试网）
+   */
+  async isOnBSCNetwork(): Promise<boolean> {
+    if (!this.provider) {
+      return false;
+    }
+
+    try {
+      const network = await this.provider.getNetwork();
+      return network.chainId === 56 || network.chainId === 97; // BSC Mainnet (56) or Testnet (97)
+    } catch (error) {
+      console.error('Error checking network:', error);
+      return false;
+    }
+  }
+
+  /**
    * 检查当前是否在BSC测试网
    */
   async isOnBSCTestnet(): Promise<boolean> {
@@ -166,6 +232,59 @@ class WalletService {
     } catch (error) {
       console.error('Error checking network:', error);
       return false;
+    }
+  }
+
+  /**
+   * 检查当前是否在BSC主网
+   */
+  async isOnBSCMainnet(): Promise<boolean> {
+    if (!this.provider) {
+      return false;
+    }
+
+    try {
+      const network = await this.provider.getNetwork();
+      return network.chainId === 56; // BSC Mainnet chainId
+    } catch (error) {
+      console.error('Error checking network:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取当前网络信息
+   */
+  async getCurrentNetwork(): Promise<{ chainId: number; name: string } | null> {
+    if (!this.provider) {
+      return null;
+    }
+
+    try {
+      const network = await this.provider.getNetwork();
+      let name = 'Unknown Network';
+      
+      switch (network.chainId) {
+        case 56:
+          name = 'BSC Mainnet';
+          break;
+        case 97:
+          name = 'BSC Testnet';
+          break;
+        case 1:
+          name = 'Ethereum Mainnet';
+          break;
+        default:
+          name = `Chain ${network.chainId}`;
+      }
+      
+      return {
+        chainId: network.chainId,
+        name
+      };
+    } catch (error) {
+      console.error('Error getting network info:', error);
+      return null;
     }
   }
 
@@ -198,8 +317,8 @@ class WalletService {
   }
 
   /**
-   * 强制验证当前网络是否为BSC测试网
-   * @throws {Error} 如果不在BSC测试网则抛出错误
+   * 强制验证当前网络是否为BSC网络（主网或测试网）
+   * @throws {Error} 如果不在BSC网络则抛出错误
    */
   async enforceCorrectNetwork(): Promise<void> {
     if (!this.provider) {
@@ -208,10 +327,12 @@ class WalletService {
 
     try {
       const network = await this.provider.getNetwork();
+      const BSC_MAINNET_CHAIN_ID = 56;
       const BSC_TESTNET_CHAIN_ID = 97;
       
-      if (network.chainId !== BSC_TESTNET_CHAIN_ID) {
-        throw new Error(`错误的网络！当前网络: ${network.chainId}，请切换到BSC测试网 (Chain ID: ${BSC_TESTNET_CHAIN_ID})`);
+      if (network.chainId !== BSC_MAINNET_CHAIN_ID && network.chainId !== BSC_TESTNET_CHAIN_ID) {
+        const networkInfo = await this.getCurrentNetwork();
+        throw new Error(`错误的网络！当前网络: ${networkInfo?.name || network.chainId}，请切换到BSC网络 (主网 Chain ID: ${BSC_MAINNET_CHAIN_ID} 或测试网 Chain ID: ${BSC_TESTNET_CHAIN_ID})`);
       }
     } catch (error) {
       console.error('Network validation failed:', error);
