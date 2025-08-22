@@ -191,10 +191,10 @@ export default function Orders() {
                       <div className="flex-1">
                         <h3 className="text-white font-medium">{item.product_name}</h3>
                         <p className="text-slate-400 text-sm">数量: {item.quantity}</p>
-                        <p className="text-slate-400 text-sm">单价: {item.price} LUM</p>
+                        <p className="text-slate-400 text-sm">单价: {item.price} BNB</p>
                       </div>
                       <span className="text-yellow-400 font-bold">
-                        {(item.price * item.quantity).toFixed(0)} LUM
+                        {(item.price * item.quantity).toFixed(4)} BNB
                       </span>
                     </div>
                   ))}
@@ -241,7 +241,7 @@ export default function Orders() {
                   
                   <div className="flex justify-between text-slate-300">
                     <span>支付方式</span>
-                    <span>{selectedOrder.payment_method}</span>
+                    <span>BNB</span>
                   </div>
                   
                   {selectedOrder.transaction_hash && (
@@ -256,7 +256,7 @@ export default function Orders() {
                   <div className="border-t border-slate-600 pt-4">
                     <div className="flex justify-between text-white font-bold text-lg">
                       <span>总计</span>
-                      <span className="text-yellow-400">{selectedOrder.total_amount} LUM</span>
+                      <span className="text-yellow-400">{selectedOrder.total_amount} BNB</span>
                     </div>
                   </div>
                 </div>
@@ -412,7 +412,7 @@ export default function Orders() {
                         </span>
                       </div>
                       <p className="text-yellow-400 font-bold text-lg">
-                        {order.total_amount} LUM
+                        {order.total_amount} BNB
                       </p>
                     </div>
                   </div>

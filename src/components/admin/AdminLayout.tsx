@@ -13,7 +13,8 @@ import {
   X,
   Shield,
   User,
-  ChevronDown
+  ChevronDown,
+  CreditCard
 } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { toast } from 'sonner';
@@ -65,6 +66,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       href: '/admin/reports',
       icon: BarChart3,
       roles: ['super_admin', 'admin', 'analyst']
+    },
+    {
+      name: '订阅管理',
+      href: '/admin/subscriptions',
+      icon: CreditCard,
+      roles: ['super_admin', 'admin']
     },
     {
       name: '系统设置',

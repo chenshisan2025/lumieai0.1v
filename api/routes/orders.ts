@@ -16,7 +16,7 @@ router.post('/', async (req: Request, res: Response) => {
       user_id, 
       items, 
       shipping_address, 
-      payment_method = 'lum_token',
+      payment_method = 'bnb_token',
       notes 
     } = req.body;
 
@@ -29,13 +29,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     // 验证商品和计算总价
     let totalAmount = 0;
-    let totalLumAmount = 0;
+    let totalBnbAmount = 0;
     const validatedItems = [];
 
     for (const item of items) {
       const { data: product } = await supabase
         .from('products')
-        .select('id, name, price, lum_price, stock_quantity, is_active')
+        .select('id, name, price, bnb_price, stock_quantity, is_active')
         .eq('id', item.product_id)
         .single();
 
@@ -54,15 +54,15 @@ router.post('/', async (req: Request, res: Response) => {
       }
 
       totalAmount += product.price * item.quantity;
-      totalLumAmount += product.lum_price * item.quantity;
+      totalBnbAmount += product.bnb_price * item.quantity;
       
       validatedItems.push({
         product_id: item.product_id,
         quantity: item.quantity,
         unit_price: product.price,
-        unit_lum_price: product.lum_price,
+        unit_bnb_price: product.bnb_price,
         subtotal: product.price * item.quantity,
-        subtotal_lum: product.lum_price * item.quantity
+        subtotal_bnb: product.bnb_price * item.quantity
       });
     }
 
@@ -76,7 +76,7 @@ router.post('/', async (req: Request, res: Response) => {
         order_number: orderNumber,
         user_id,
         total_amount: totalAmount,
-        total_lum_amount: totalLumAmount,
+        total_bnb_amount: totalBnbAmount,
         payment_method,
         payment_status: 'pending',
         order_status: 'pending',

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, MapPin, Package, ArrowLeft, Wallet, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { CreditCard, MapPin, Package, ArrowLeft, Wallet, CheckCircle, AlertCircle, Loader, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import { useShop } from '../contexts/ShopContext';
 import { useOrder } from '../contexts/OrderContext';
 import { useMembership } from '../contexts/MembershipContext';
+import LUMPayment from '@/components/LUMPayment';
 
 interface PaymentStep {
   id: string;
@@ -27,6 +28,7 @@ export default function Checkout() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactionHash, setTransactionHash] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'BNB' | 'LUM'>('BNB');
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
     phone: '',
@@ -127,7 +129,7 @@ export default function Checkout() {
           price: item.product.price
         })),
         shipping_address: `${shippingInfo.name}, ${shippingInfo.phone}, ${shippingInfo.address}, ${shippingInfo.city} ${shippingInfo.postalCode}`,
-        payment_method: 'LUM'
+        payment_method: 'BNB'
       };
       
       const order = await createOrder(orderData);
@@ -327,44 +329,99 @@ export default function Checkout() {
                 <h2 className="text-xl font-bold text-white mb-6">支付方式</h2>
                 
                 <div className="space-y-4">
-                  <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Wallet className="w-6 h-6 text-yellow-400" />
-                      <span className="text-white font-semibold">LUM 代币支付</span>
-                    </div>
+                  {/* 支付方式选择 */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <button
+                      onClick={() => setSelectedPaymentMethod('BNB')}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        selectedPaymentMethod === 'BNB'
+                          ? 'border-yellow-500 bg-yellow-500/20'
+                          : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Wallet className="w-6 h-6 text-yellow-400" />
+                        <div className="text-left">
+                          <div className="text-white font-semibold">BNB 支付</div>
+                          <div className="text-slate-400 text-sm">使用 BNB 代币支付</div>
+                        </div>
+                      </div>
+                    </button>
                     
-                    {!walletConnected ? (
-                      <div className="text-center py-6">
-                        <p className="text-slate-400 mb-4">请连接您的钱包以使用 LUM 代币支付</p>
-                        <button
-                          onClick={connectWallet}
-                          disabled={isProcessing}
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {isProcessing ? (
-                            <Loader className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <Wallet className="w-5 h-5" />
-                          )}
-                          {isProcessing ? '连接中...' : '连接钱包'}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
-                          <span className="text-slate-300">钱包余额</span>
-                          <span className="text-yellow-400 font-bold">{walletBalance} LUM</span>
+                    <button
+                      onClick={() => setSelectedPaymentMethod('LUM')}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        selectedPaymentMethod === 'LUM'
+                          ? 'border-purple-500 bg-purple-500/20'
+                          : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Coins className="w-6 h-6 text-purple-400" />
+                        <div className="text-left">
+                          <div className="text-white font-semibold">LUM 支付</div>
+                          <div className="text-slate-400 text-sm">使用 LUM 代币支付</div>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
-                          <span className="text-slate-300">需要支付</span>
-                          <span className="text-white font-bold">{finalTotal} LUM</span>
-                        </div>
-                        {walletBalance < finalTotal && (
-                          <p className="text-red-400 text-sm">余额不足，请充值后再试</p>
-                        )}
                       </div>
-                    )}
+                    </button>
                   </div>
+
+                  {/* BNB 支付 */}
+                  {selectedPaymentMethod === 'BNB' && (
+                    <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Wallet className="w-6 h-6 text-yellow-400" />
+                        <span className="text-white font-semibold">BNB 代币支付</span>
+                      </div>
+                      
+                      {!walletConnected ? (
+                        <div className="text-center py-6">
+                          <p className="text-slate-400 mb-4">请连接您的钱包以使用 BNB 代币支付</p>
+                          <button
+                            onClick={connectWallet}
+                            disabled={isProcessing}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isProcessing ? (
+                              <Loader className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <Wallet className="w-5 h-5" />
+                            )}
+                            {isProcessing ? '连接中...' : '连接钱包'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+                            <span className="text-slate-300">钱包余额</span>
+                            <span className="text-yellow-400 font-bold">{walletBalance} BNB</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+                            <span className="text-slate-300">需要支付</span>
+                            <span className="text-white font-bold">{finalTotal} BNB</span>
+                          </div>
+                          {walletBalance < finalTotal && (
+                            <p className="text-red-400 text-sm">余额不足，请充值后再试</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* LUM 支付 */}
+                  {selectedPaymentMethod === 'LUM' && (
+                    <LUMPayment
+                      amount={finalTotal}
+                      onPaymentSuccess={(txHash) => {
+                        setTransactionHash(txHash);
+                        setCurrentStep(2);
+                      }}
+                      onPaymentError={(error) => {
+                        setError(error);
+                      }}
+                      disabled={isProcessing}
+                    />
+                  )}
                 </div>
                 
                 <div className="flex gap-4 mt-6">
@@ -409,7 +466,7 @@ export default function Checkout() {
                         <p className="text-slate-400 text-sm">数量: {item.quantity}</p>
                       </div>
                       <span className="text-yellow-400 font-bold">
-                        {(item.product.price * item.quantity).toFixed(0)} LUM
+                        {(item.product.price * item.quantity).toFixed(4)} BNB
                       </span>
                     </div>
                   ))}
@@ -468,13 +525,13 @@ export default function Checkout() {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-slate-300">
                   <span>商品总价</span>
-                  <span>{subtotal} LUM</span>
+                  <span>{subtotal} BNB</span>
                 </div>
                 
                 {membershipInfo && discount > 0 && (
                   <div className="flex justify-between text-green-400">
                     <span>会员折扣 ({membershipInfo.level.name})</span>
-                    <span>-{discount} LUM</span>
+                    <span>-{discount} BNB</span>
                   </div>
                 )}
                 
@@ -486,7 +543,7 @@ export default function Checkout() {
                 <div className="border-t border-slate-600 pt-4">
                   <div className="flex justify-between text-white font-bold text-lg">
                     <span>总计</span>
-                    <span className="text-yellow-400">{finalTotal} LUM</span>
+                    <span className="text-yellow-400">{finalTotal} BNB</span>
                   </div>
                 </div>
               </div>
@@ -495,7 +552,7 @@ export default function Checkout() {
               <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-5 h-5 text-yellow-400" />
-                  <span className="text-white font-medium">LUM 代币支付</span>
+                  <span className="text-white font-medium">BNB 代币支付</span>
                 </div>
                 <p className="text-xs text-slate-400">
                   🔒 安全支付 • 区块链保障

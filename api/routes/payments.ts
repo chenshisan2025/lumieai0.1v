@@ -16,22 +16,22 @@ router.post('/create', async (req: Request, res: Response) => {
       order_id, 
       user_id, 
       amount, 
-      lum_amount, 
-      payment_method = 'lum_token',
+      bnb_amount, 
+      payment_method = 'bnb_token',
       wallet_address 
     } = req.body;
 
-    if (!order_id || !user_id || !lum_amount || !wallet_address) {
+    if (!order_id || !user_id || !bnb_amount || !wallet_address) {
       return res.status(400).json({
         success: false,
-        error: 'order_id, user_id, lum_amount and wallet_address are required'
+        error: 'order_id, user_id, bnb_amount and wallet_address are required'
       });
     }
 
     // 验证订单存在且状态正确
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, order_status, payment_status, total_lum_amount')
+      .select('id, order_status, payment_status, total_bnb_amount')
       .eq('id', order_id)
       .eq('user_id', user_id)
       .single();
@@ -50,7 +50,7 @@ router.post('/create', async (req: Request, res: Response) => {
       });
     }
 
-    if (order.total_lum_amount !== lum_amount) {
+    if (order.total_bnb_amount !== bnb_amount) {
       return res.status(400).json({
         success: false,
         error: 'Payment amount mismatch'
@@ -68,7 +68,7 @@ router.post('/create', async (req: Request, res: Response) => {
         order_id,
         user_id,
         amount: amount || 0,
-        lum_amount,
+        bnb_amount,
         payment_method,
         payment_status: 'pending',
         wallet_address
@@ -95,7 +95,7 @@ router.post('/create', async (req: Request, res: Response) => {
   }
 });
 
-// 验证LUM代币余额
+// 验证BNB代币余额
 router.post('/verify-balance', async (req: Request, res: Response) => {
   try {
     const { wallet_address, required_amount } = req.body;
@@ -107,7 +107,7 @@ router.post('/verify-balance', async (req: Request, res: Response) => {
       });
     }
 
-    // 这里应该调用区块链API来检查LUM代币余额
+    // 这里应该调用区块链API来检查BNB代币余额
     // 目前模拟余额检查
     const mockBalance = 1000; // 模拟余额
     
@@ -130,8 +130,8 @@ router.post('/verify-balance', async (req: Request, res: Response) => {
   }
 });
 
-// 处理LUM代币支付
-router.post('/process-lum', async (req: Request, res: Response) => {
+// 处理BNB代币支付
+router.post('/process-bnb', async (req: Request, res: Response) => {
   try {
     const { 
       payment_id, 
@@ -242,7 +242,7 @@ router.get('/:paymentId', async (req: Request, res: Response) => {
         orders(
           order_number,
           total_amount,
-          total_lum_amount,
+          total_bnb_amount,
           order_status
         )
       `)
@@ -366,7 +366,7 @@ router.post('/refund', async (req: Request, res: Response) => {
       });
     }
 
-    if (refund_amount > payment.lum_amount) {
+    if (refund_amount > payment.bnb_amount) {
       return res.status(400).json({
         success: false,
         error: 'Refund amount exceeds payment amount'

@@ -12,6 +12,7 @@ import Cart from '@/pages/Cart';
 import Checkout from '@/pages/Checkout';
 import Orders from '@/pages/Orders';
 import Membership from '@/pages/Membership';
+import SubscriptionPage from '@/pages/SubscriptionPage';
 
 // Admin pages
 import AdminLogin from '@/pages/admin/Login';
@@ -22,6 +23,7 @@ import AdminTasks from '@/pages/admin/Tasks';
 import AdminAnnouncements from '@/pages/admin/Announcements';
 import AdminReports from '@/pages/admin/Reports';
 import AdminSettings from '@/pages/admin/Settings';
+import AdminSubscriptions from '@/pages/admin/Subscriptions';
 
 export default function App() {
   return (
@@ -41,6 +43,7 @@ export default function App() {
                      <Route path="/checkout" element={<Checkout />} />
                      <Route path="/orders" element={<Orders />} />
                      <Route path="/membership" element={<Membership />} />
+                     <Route path="/subscription" element={<SubscriptionPage />} />
                      
                      {/* Admin routes */}
                      <Route path="/admin/login" element={<AdminLogin />} />
@@ -51,6 +54,7 @@ export default function App() {
                      <Route path="/admin/announcements" element={<AdminAnnouncements />} />
                      <Route path="/admin/reports" element={<AdminReports />} />
                      <Route path="/admin/settings" element={<AdminSettings />} />
+                     <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
                    </Routes>
                  </main>
                  <Toaster />

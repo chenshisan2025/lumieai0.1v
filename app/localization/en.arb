@@ -28,8 +28,12 @@
   "reports": "Reports",
   "language": "Language",
   "dark_mode": "Dark Mode",
-  "buy_with_lum": "Pay with LUM",
-  "insufficient_balance": "Insufficient LUM balance",
+
+  "buy_with_bnb": "Pay with BNB",
+  "insufficient_bnb_balance": "Insufficient BNB balance",
+  "subscription_price_bnb": "Subscription Price (BNB)",
+  "subscription_active_until": "Subscription active until",
+  "pay_in_bnb": "Pay with BNB",
   "success": "Success",
   "error": "Error"
 }

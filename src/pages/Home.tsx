@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Award, Trophy, Star, Target, ArrowRight } from 'lucide-react';
+import MedicalDisclaimer from '../components/MedicalDisclaimer';
 
 export default function Home() {
   return (
@@ -82,6 +83,13 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Medical Disclaimer */}
+      <div className="py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <MedicalDisclaimer />
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Middleware
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import asynccontextmanager
@@ -40,7 +40,7 @@ app = FastAPI(
 # Add middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_HOSTS,
+    allow_origins=[settings.ALLOWED_HOSTS] if settings.ALLOWED_HOSTS != "*" else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,7 +48,7 @@ app.add_middleware(
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=settings.ALLOWED_HOSTS,
+    allowed_hosts=[settings.ALLOWED_HOSTS] if settings.ALLOWED_HOSTS != "*" else ["*"],
 )
 
 app.add_middleware(AuthMiddleware)
