@@ -14,7 +14,8 @@ import {
   Shield,
   User,
   ChevronDown,
-  CreditCard
+  CreditCard,
+  Database
 } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { toast } from 'sonner';
@@ -47,6 +48,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       name: '锚定记录',
       href: '/admin/anchoring',
       icon: Anchor,
+      roles: ['super_admin', 'admin', 'analyst']
+    },
+    {
+      name: '数据证明',
+      href: '/admin/data-proof',
+      icon: Database,
       roles: ['super_admin', 'admin', 'analyst']
     },
     {

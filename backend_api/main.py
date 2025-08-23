@@ -7,24 +7,33 @@ import uvicorn
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.redis import init_redis
+from app.core.logging import setup_logging, get_logger
+from app.core.exceptions import setup_exception_handlers
 from app.api.v1.router import api_router
 from app.middleware.auth import AuthMiddleware
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+
+# 设置日志记录
+setup_logging()
+logger = get_logger("main")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
+    logger.info("Starting LUMIEAI Backend API")
     await init_db()
     await init_redis()
-    print("🚀 LUMIEAI Backend API started successfully")
+    logger.info("🚀 LUMIEAI Backend API started successfully")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info(f"Debug mode: {settings.DEBUG}")
     
     yield
     
     # Shutdown
-    print("🛑 LUMIEAI Backend API shutting down")
+    logger.info("🛑 LUMIEAI Backend API shutting down")
 
 
 # Create FastAPI application
@@ -36,6 +45,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.ENVIRONMENT == "development" else None,
     lifespan=lifespan,
 )
+
+# 设置异常处理器
+setup_exception_handlers(app)
 
 # Add middleware
 app.add_middleware(

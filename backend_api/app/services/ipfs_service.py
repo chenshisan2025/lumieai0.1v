@@ -10,8 +10,10 @@ import base64
 import httpx
 from ..core.config import settings
 from .kms_service import get_kms_service, KMSService
+from ..core.logging import get_logger, log_operation
+from ..core.exceptions import IPFSException, ExternalServiceException
 
-logger = logging.getLogger(__name__)
+logger = get_logger("ipfs_service")
 
 class EncryptionService:
     """AES-256-GCM加密服务，集成KMS密钥管理"""
@@ -93,6 +95,7 @@ class IPFSService:
         self.encryption_service = EncryptionService()
         self.api_url = getattr(settings, 'IPFS_API_URL', 'http://localhost:5001')
         self.gateway_url = getattr(settings, 'IPFS_GATEWAY_URL', 'http://localhost:8080')
+        self.logger = get_logger("ipfs_service")
         self.connect()
     
     def connect(self):
@@ -122,6 +125,7 @@ class IPFSService:
             logger.error(f"IPFS connection check failed: {e}")
             return False
     
+    @log_operation("upload_json_encrypted")
     async def upload_json_encrypted(self, data: Dict[str, Any], filename: str = "data.json") -> Optional[Dict[str, Any]]:
         """加密并上传JSON数据到IPFS
         
@@ -133,12 +137,13 @@ class IPFSService:
             包含CID、URL和加密信息的字典
         """
         if not self.client:
-            logger.error("IPFS client not connected")
+            self.logger.error("IPFS client not connected")
             return None
         
         try:
             # 1. 将数据转换为JSON字符串
             json_str = json.dumps(data, ensure_ascii=False, indent=2)
+            self.logger.info(f"Uploading encrypted JSON to IPFS, size: {len(json_str)} bytes")
             
             # 2. 加密数据
             encrypted_result = self.encryption_service.encrypt_data(json_str)
@@ -159,7 +164,7 @@ class IPFSService:
             # 4. 上传加密数据包到IPFS
             encrypted_json = json.dumps(encrypted_package, ensure_ascii=False)
             
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 files = {'file': (filename, encrypted_json.encode('utf-8'), 'application/json')}
                 response = await client.post(
                     f"{self.api_url}/api/v0/add",
@@ -171,7 +176,7 @@ class IPFSService:
                 result = response.json()
                 cid = result['Hash']
                 
-                logger.info(f"Successfully uploaded encrypted data to IPFS: {cid}")
+                self.logger.info(f"Successfully uploaded encrypted data to IPFS: {cid}")
                 
                 return {
                     'success': True,
@@ -185,13 +190,20 @@ class IPFSService:
                     }
                 }
             else:
-                logger.error(f"IPFS upload failed with status {response.status_code}: {response.text}")
-                return None
+                self.logger.error(f"IPFS upload failed with status {response.status_code}: {response.text}")
+                raise IPFSException(f"Upload failed with status {response.status_code}: {response.text}")
                 
+        except IPFSException:
+            raise
+        except httpx.TimeoutException:
+            raise IPFSException("Upload timeout after 30 seconds")
+        except httpx.RequestError as e:
+            raise IPFSException(f"Network error during upload: {str(e)}")
         except Exception as e:
-            logger.error(f"Failed to upload encrypted JSON to IPFS: {e}")
-            return None
+            self.logger.error(f"Unexpected error uploading encrypted JSON to IPFS: {e}")
+            raise IPFSException(f"Failed to upload encrypted JSON to IPFS: {e}")
     
+    @log_operation("upload_json")
     async def upload_json(self, data: Dict[str, Any], filename: str = "data.json") -> Optional[Dict[str, Any]]:
         """上传JSON数据到IPFS（未加密，向后兼容）
         
@@ -203,15 +215,16 @@ class IPFSService:
             包含CID和URL的字典
         """
         if not self.client:
-            logger.error("IPFS client not connected")
-            return None
+            self.logger.error("IPFS client not connected")
+            raise IPFSException("IPFS client not connected")
         
         try:
             # 将数据转换为JSON字符串
             json_str = json.dumps(data, ensure_ascii=False, indent=2)
+            self.logger.info(f"Uploading JSON to IPFS, size: {len(json_str)} bytes")
             
             # Upload to IPFS using HTTP API
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 files = {'file': (filename, json_str.encode('utf-8'), 'application/json')}
                 response = await client.post(
                     f"{self.api_url}/api/v0/add",
@@ -223,7 +236,7 @@ class IPFSService:
                 result = response.json()
                 cid = result['Hash']
                 
-                logger.info(f"Successfully uploaded to IPFS: {cid}")
+                self.logger.info(f"Successfully uploaded to IPFS: {cid}")
                 
                 return {
                     'success': True,
@@ -233,12 +246,18 @@ class IPFSService:
                     'encrypted': False
                 }
             else:
-                logger.error(f"IPFS upload failed with status {response.status_code}: {response.text}")
-                return None
+                self.logger.error(f"IPFS upload failed with status {response.status_code}: {response.text}")
+                raise IPFSException(f"Upload failed with status {response.status_code}: {response.text}")
                 
+        except IPFSException:
+            raise
+        except httpx.TimeoutException:
+            raise IPFSException("Upload timeout after 30 seconds")
+        except httpx.RequestError as e:
+            raise IPFSException(f"Network error during upload: {str(e)}")
         except Exception as e:
-            logger.error(f"Failed to upload JSON to IPFS: {e}")
-            return None
+            self.logger.error(f"Unexpected error uploading JSON to IPFS: {e}")
+            raise IPFSException(f"Failed to upload JSON to IPFS: {e}")
     
     async def download_json_encrypted(self, cid: str, nonce: str) -> Optional[Dict[str, Any]]:
         """从IPFS下载并解密JSON数据
@@ -282,6 +301,7 @@ class IPFSService:
             logger.error(f"Failed to download encrypted JSON from IPFS CID {cid}: {e}")
             return None
     
+    @log_operation("download_json")
     async def download_json(self, cid: str) -> Optional[Dict[str, Any]]:
         """从IPFS下载JSON数据（未加密）
         
@@ -292,26 +312,36 @@ class IPFSService:
             JSON数据
         """
         if not self.client:
-            logger.error("IPFS client not connected")
-            return None
+            self.logger.error("IPFS client not connected")
+            raise IPFSException("IPFS client not connected")
         
         try:
+            self.logger.info(f"Downloading JSON from IPFS: {cid}")
+            
             # Download from IPFS - 使用API而不是网关
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.api_url}/api/v0/cat",
                     params={'arg': cid}
                 )
             
             if response.status_code == 200:
-                return response.json()
+                data = response.json()
+                self.logger.info(f"Successfully downloaded JSON from IPFS: {cid}")
+                return data
             else:
-                logger.error(f"Failed to download from IPFS: {response.status_code}")
-                return None
+                self.logger.error(f"Failed to download from IPFS with status {response.status_code}: {response.text}")
+                raise IPFSException(f"Download failed with status {response.status_code}: {response.text}")
                 
+        except IPFSException:
+            raise
+        except httpx.TimeoutException:
+            raise IPFSException("Download timeout after 30 seconds")
+        except httpx.RequestError as e:
+            raise IPFSException(f"Network error during download: {str(e)}")
         except Exception as e:
-            logger.error(f"Failed to download JSON from IPFS CID {cid}: {e}")
-            return None
+            self.logger.error(f"Unexpected error downloading JSON from IPFS CID {cid}: {e}")
+            raise IPFSException(f"Failed to download JSON from IPFS: {e}")
     
     async def pin_cid(self, cid: str) -> bool:
         """Pin CID到IPFS节点"""

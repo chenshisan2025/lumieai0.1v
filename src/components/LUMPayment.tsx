@@ -28,7 +28,7 @@ export default function LUMPayment({
   const [currentStep, setCurrentStep] = useState<'connect' | 'approve' | 'pay'>('connect');
 
   // 商城合约地址 - 这里需要替换为实际的商城合约地址
-  const SHOP_CONTRACT_ADDRESS = process.env.REACT_APP_SHOP_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
+  const SHOP_CONTRACT_ADDRESS = import.meta.env.VITE_SHOP_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
 
   useEffect(() => {
     initializeWallet();

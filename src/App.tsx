@@ -19,6 +19,7 @@ import AdminLogin from '@/pages/admin/Login';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
 import AdminAnchoring from '@/pages/admin/Anchoring';
+import AdminDataProof from '@/pages/admin/DataProof';
 import AdminTasks from '@/pages/admin/Tasks';
 import AdminAnnouncements from '@/pages/admin/Announcements';
 import AdminReports from '@/pages/admin/Reports';
@@ -50,6 +51,7 @@ export default function App() {
                      <Route path="/admin/dashboard" element={<AdminDashboard />} />
                      <Route path="/admin/users" element={<AdminUsers />} />
                      <Route path="/admin/anchoring" element={<AdminAnchoring />} />
+                     <Route path="/admin/data-proof" element={<AdminDataProof />} />
                      <Route path="/admin/tasks" element={<AdminTasks />} />
                      <Route path="/admin/announcements" element={<AdminAnnouncements />} />
                      <Route path="/admin/reports" element={<AdminReports />} />

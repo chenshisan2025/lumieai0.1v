@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     BSC_API_KEY: Optional[str] = None
     SUBSCRIPTION_MANAGER_ADDRESS: str = "0x9c7920f113B27De6a57bbCF53D6111cbA5532498"
     
+    # BscScan API
+    BSCSCAN_API_KEY: Optional[str] = None
+    BSCSCAN_API_URL: str = "https://api.bscscan.com/api"
+    BSCSCAN_EXPLORER_URL: str = "https://bscscan.com"
+    
     # Subscription Plan (Default)
     DEFAULT_PLAN_ID: int = 1
     DEFAULT_PLAN_PRICE: str = "0.1"  # BNB
@@ -49,6 +54,15 @@ class Settings(BaseSettings):
     IPFS_API_URL: str = "http://localhost:5001"
     IPFS_GATEWAY_URL: str = "http://localhost:8080"
     IPFS_GATEWAY: str = "https://gateway.pinata.cloud/ipfs/"
+    
+    # Pinata IPFS Service
+    PINATA_JWT: Optional[str] = None
+    PINATA_API_KEY: Optional[str] = None
+    PINATA_SECRET_KEY: Optional[str] = None
+    PINATA_GATEWAY_URL: str = "https://gateway.pinata.cloud"
+    PINATA_MAX_RETRIES: int = 3
+    PINATA_RETRY_DELAY: float = 1.0
+    PINATA_TIMEOUT: float = 30.0
     
     # Data Encryption
     AES_ENCRYPTION_KEY: Optional[str] = None  # Base64 encoded AES-256 key

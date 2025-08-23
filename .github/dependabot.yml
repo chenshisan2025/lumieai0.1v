@@ -1,0 +1,101 @@
+version: 2
+updates:
+  # Enable version updates for npm (main project)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "lumieai-team"
+    assignees:
+      - "lumieai-team"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    
+  # Enable version updates for Flutter
+  - package-ecosystem: "pub"
+    directory: "/flutter_app"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "lumieai-team"
+    assignees:
+      - "lumieai-team"
+    labels:
+      - "dependencies"
+      - "flutter"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    
+  # Enable version updates for Python
+  - package-ecosystem: "pip"
+    directory: "/backend_api"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "lumieai-team"
+    assignees:
+      - "lumieai-team"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    
+  # Enable version updates for Smart Contracts
+  - package-ecosystem: "npm"
+    directory: "/contracts"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "lumieai-team"
+    assignees:
+      - "lumieai-team"
+    labels:
+      - "dependencies"
+      - "smart-contracts"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "lumieai-team"
+    assignees:
+      - "lumieai-team"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"

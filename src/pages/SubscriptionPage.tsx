@@ -502,7 +502,7 @@ const SubscriptionPage: React.FC = () => {
       )}
 
       {/* 调试信息 */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <Card className="mt-6 border-dashed">
           <CardHeader>
             <CardTitle className="text-sm">调试信息</CardTitle>

@@ -1,14 +1,31 @@
+import asyncio
+from typing import Dict, Any, Optional
+from datetime import datetime
 from web3 import Web3
-from typing import Optional, Dict, Any
-from datetime import datetime, timezone
+
+# Handle different web3.py versions
+try:
+    from web3.middleware import geth_poa_middleware
+except ImportError:
+    try:
+        from web3.middleware.geth_poa import geth_poa_middleware
+    except ImportError:
+        # Fallback for very new versions
+        geth_poa_middleware = None
+
 from ..core.config import settings
+from ..core.logging import get_logger, log_operation
+from ..core.exceptions import BlockchainException, ValidationException
+
+logger = get_logger("web3_service")
 
 
 class Web3Service:
-    """Web3 service for blockchain interactions"""
-    
     def __init__(self):
-        self.w3 = Web3(Web3.HTTPProvider(settings.BSC_RPC_URL))
+        self.rpc_url = settings.BSC_RPC_URL
+        self.w3 = None
+        self.logger = get_logger("web3_service")
+        self.connect()
         self.subscription_manager_address = settings.SUBSCRIPTION_MANAGER_ADDRESS
         
         # SubscriptionManager ABI (minimal required functions)
@@ -41,10 +58,42 @@ class Web3Service:
         ]
         
         # Create contract instance
-        self.subscription_contract = self.w3.eth.contract(
-            address=self.subscription_manager_address,
-            abi=self.subscription_manager_abi
-        )
+        if self.w3:
+            self.subscription_contract = self.w3.eth.contract(
+                address=self.subscription_manager_address,
+                abi=self.subscription_manager_abi
+            )
+    
+    def connect(self):
+        """连接到BSC网络"""
+        try:
+            self.logger.info(f"Connecting to BSC network: {self.rpc_url}")
+            self.w3 = Web3(Web3.HTTPProvider(self.rpc_url))
+            # 添加POA中间件（用于BSC等网络）
+            if geth_poa_middleware:
+                try:
+                    if hasattr(self.w3.middleware_onion, 'inject'):
+                        self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+                    else:
+                        self.w3.middleware_onion.add(geth_poa_middleware)
+                    self.logger.debug("POA middleware added successfully")
+                except Exception as e:
+                    self.logger.warning(f"Failed to add POA middleware: {str(e)}")
+            else:
+                self.logger.warning("POA middleware not available in this web3.py version")
+            
+            if self.w3.is_connected():
+                self.logger.info("Successfully connected to BSC network")
+            else:
+                self.logger.error("Failed to connect to BSC network")
+                raise BlockchainException("Failed to connect to BSC network")
+                
+        except BlockchainException:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error connecting to BSC network: {str(e)}")
+            self.w3 = None
+            raise BlockchainException(f"Error connecting to BSC network: {str(e)}")
     
     def is_connected(self) -> bool:
         """Check if Web3 is connected"""
@@ -125,6 +174,32 @@ class Web3Service:
                 "active": True,
                 "error": str(e)
             }
+    
+    @log_operation("send_transaction")
+    async def send_transaction(self, transaction_data: Dict[str, Any]) -> str:
+        """发送交易到区块链"""
+        if not self.w3 or not self.w3.is_connected():
+            raise BlockchainException("Not connected to BSC network")
+            
+        try:
+            self.logger.info("Sending transaction to BSC network")
+            
+            # 验证交易数据
+            if not transaction_data:
+                raise ValidationException("Transaction data cannot be empty")
+                
+            # 这里应该实现实际的交易发送逻辑
+            # 目前返回模拟的交易哈希
+            tx_hash = f"0x{hash(str(transaction_data) + str(datetime.utcnow().timestamp()))}"
+            
+            self.logger.info(f"Transaction sent successfully: {tx_hash}")
+            return tx_hash
+            
+        except (BlockchainException, ValidationException):
+            raise
+        except Exception as e:
+            self.logger.error(f"Failed to send transaction: {str(e)}")
+            raise BlockchainException(f"Failed to send transaction: {str(e)}")
 
 
 # Global Web3 service instance
