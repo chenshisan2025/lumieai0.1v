@@ -14,7 +14,7 @@ dependencies:
   
   # State Management
   provider: ^6.1.1
-  riverpod: ^2.4.9
+  riverpod: ">=2.4.9 <4.0.0"
   
   # Navigation
   go_router: ^16.1.0
